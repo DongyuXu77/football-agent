@@ -12,10 +12,10 @@ class controller(agent):
         """
         super().__init__(system_prompt, timeout, max_retries)
 
-    def wrap_input_content(self, content: str, status: str) -> None:
+    def wrap_input_content(self, content: str, status: str, output_format: str) -> None:
         r"""
         """
-        self.wrap_content = "当前的实时状态为:"+status+"\n需要达成的目标是:"+content+"\n能够调用子模型所具有的特征是:"+self.model_info+"\n请问达成该战术目标所需要调用的子模型是?"
+        self.wrap_content = "当前的实时状态为:"+status+"\n需要达成的目标是:"+content+"\n能够调用子模型所具有的特征是:"+self.model_info+f"\n请问达成该战术目标所需要调用的子模型是({output_format})?"
     
     def get_model_info(self):
-        self.model_info="模型1：进攻能力强，用于射门，消耗体力大；模型2：集中包围持球者，体力消耗大；模型3：球员回到禁区，体力消耗小"
+        self.model_info="模型1:进攻能力强,用于射门,消耗体力大\n模型2:集中包围持球者,体力消耗大;模型3:球员回到禁区,体力消耗小"

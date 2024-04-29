@@ -18,8 +18,8 @@ class planner(agent):
         """
         super().__init__(system_prompt, timeout, max_retries)
     
-    def wrap_input_content(self, content: str, status: str) -> None:
+    def wrap_input_content(self, content: str, status: str, output_format: str="") -> None:
         r"""
         """
-        self.wrap_content = "当前的实时状态为:"+status+"\n教练组提供的战术内容是:"+content+"\n请问达成该战术目标所需要完成的子目标是?"
+        self.wrap_content = "当前的实时状态为:"+status+"\n教练组提供的战术内容是:"+content+f"\n请问达成该战术目标所需要完成的子目标是({output_format})?"
     
