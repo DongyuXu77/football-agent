@@ -1,3 +1,7 @@
+import os
+
+import openai
+from openai import OpenAI
 
 class Registry(object):
     r""" helper function to registe sub model 
@@ -32,3 +36,13 @@ class Registry(object):
             return self._module_dict[name]
         else:
             raise KeyError(f'{name} is not registered in {self.name}')
+
+
+def call_client(timeout: float=30.0, max_retries: int=3):
+    client = OpenAI(
+        base_url="https://api.gptsapi.net/v1",
+        api_key=os.environ.get("OPENAI_API_KEY"),
+        timeout=timeout,
+        max_retries=max_retries
+    )
+    return client

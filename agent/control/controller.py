@@ -5,14 +5,13 @@ class controller(agent):
     """
 
     def __init__(self, 
-                 system_prompt: str="请深吸一口气并仔细思考如何根据需要达成的目标及当前场上的局势提供完成该战术所需要调用的子模型",
-                 timeout: float=30.0,
-                 max_retries: int=3) -> None:
+                 system_prompt: str="请深吸一口气并仔细思考如何根据需要达成的目标及当前场上的局势提供完成该战术所需要调用的子模型，回答过程请严格保持风格统一",
+                 ) -> None:
         r"""
         """
-        super().__init__(system_prompt, timeout, max_retries)
+        super().__init__(system_prompt)
 
-    def wrap_input_content(self, content: str, status: str, output_format: str) -> None:
+    def wrap_input_content(self, content: str, status: str, output_format: str='') -> None:
         r"""
         """
         self.wrap_content = "当前的实时状态为:"+status+"\n需要达成的目标是:"+content+"\n能够调用子模型所具有的特征是:"+self.model_info+f"\n请问达成该战术目标所需要调用的子模型是({output_format})?"
