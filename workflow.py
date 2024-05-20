@@ -5,6 +5,7 @@ import signal
 from threading import Thread
 import time
 
+from colorama import Fore
 from agent.plan import planner
 from agent.control import controller
 from agent.env import announcer
@@ -19,27 +20,45 @@ def set_env_variable():
     os.environ["OPENAI_API_KEY"] = ""
     os.environ["OPENAI_LOG"] = "debug"
 
-def workflow_process(planner, controller, announcer, user_input: str, log_queue):
+def workflow_process(planner, controller, state_queue, user_input: str, log_queue):
         r"""
         """
-        _, announcer_response, _ = announcer.get_response()
-        log_queue.put(announcer_response)
+        while state_queue.empty():
+            time.sleep(1)
+        announcer_response = state_queue.get()
+        log_queue.put(('announcer', announcer_response))
         planner.wrap_input_content(content=user_input, status=announcer_response)
         _, planner_response, _ = planner.get_response()
-        log_queue.put(planner_response)
+        log_queue.put(('planner', planner_response))
         controller.wrap_input_content(content=planner_response, status=announcer_response)
+        _, controller_response, _ = controller.get_response()
+        log_queue.put(('controller', controller_response))
+
+def announce_process(announcer, state_queue):
+    r"""
+    """
+    _, announcer_response, _ = announcer.get_response()
+    if not state_queue.empty():
+        state_queue.get()
+    state_queue.put(announcer_response)
 
 def log_listener(log_queue):
     while True:
         time.sleep(2)
         if not log_queue.empty():
-            print(log_queue.get())
+            tag, text = log_queue.get()
+            if tag == 'announcer':
+                print(Fore.RED + text)
+            elif tag == 'planner':
+                print(Fore.GREEN + text)
+            elif tag == 'controller':
+                print(Fore.YELLOW + text)
 
 def input_listener(input_queue):
     while True:
         input_text = input("Please enter your strategy")
         input_queue.put(input_text)
-        time.sleep(50) # free GIL
+        time.sleep(100) # free GIL
 
 class google_football(object):
     r"""
@@ -49,8 +68,6 @@ class google_football(object):
         r"""
         """
         set_env_variable()
-        self.planner = planner()
-        self.controller = controller()
         self.play()
     
     def play(self):
@@ -59,6 +76,7 @@ class google_football(object):
 
         log_queue = multiprocessing.Queue()
         input_queue = multiprocessing.Queue()
+        state_queue = multiprocessing.Queue()
         planner_instance = planner()
         planner_instance.set_few_shot_prompt(json_file_path="agent/argument/few_shot_prompt/few_shot_prompt.json")
         controller_instance = controller()
@@ -72,6 +90,8 @@ class google_football(object):
         input_thread.start()
         log_thread = Thread(target=log_listener, args=(log_queue, ))
         log_thread.start()
+        announce_proc = multiprocessing.Process(target=announce_process, args=(announcer_instance, state_queue, ))
+        announce_proc.start()
 
         workflow_proc = multiprocessing.Process()
         while True:
@@ -80,7 +100,7 @@ class google_football(object):
             input_text = input_queue.get()
             if workflow_proc.is_alive():
                 workflow_proc.terminate()
-            workflow_proc = multiprocessing.Process(target=workflow_process, args=(planner_instance, controller_instance, announcer_instance, input_text, log_queue, ))
+            workflow_proc = multiprocessing.Process(target=workflow_process, args=(planner_instance, controller_instance, state_queue, input_text, log_queue, ))
             workflow_proc.start()
         
 if __name__=="__main__":
