@@ -20,4 +20,4 @@ class announcer(agent):
             raise FileNotFoundError(f" the announcer document file in path :{document_path} doesn't exist")
         f = open(document_path, 'r')
         data = f.read()
-        self.wrap_content = "用户提供的文档为:"+data+"当前的实时状态数据为:"+content
+        self.wrap_content = "用户提供的文档为:"+data+"当前的实时状态数据为:"+str(content)

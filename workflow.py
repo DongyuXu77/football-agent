@@ -3,7 +3,9 @@ import multiprocessing
 import os
 import signal
 from threading import Thread
+import pdb
 import time
+import redis
 
 from colorama import Fore
 from agent.plan import planner
@@ -17,7 +19,7 @@ TO DO LIST:
 
 def set_env_variable():
     # OPENAI ENVIRONMENT
-    os.environ["OPENAI_API_KEY"] = ""
+    os.environ["OPENAI_API_KEY"] = "sk-QJxd5dfa630db8c817a8eb06347957f2c6ad5cb1500YN9Gq"
     os.environ["OPENAI_LOG"] = "debug"
 
 def workflow_process(planner, controller, state_queue, user_input: str, log_queue):
@@ -81,10 +83,14 @@ class google_football(object):
         planner_instance.set_few_shot_prompt(json_file_path="agent/argument/few_shot_prompt/few_shot_prompt.json")
         controller_instance = controller()
         announcer_instance = announcer()
+        #pdb.set_trace()
+        redis_client = redis.StrictRedis(host='localhost', port=30386, db=0)
         
         f = open('agent/argument/env.json', 'r')
         data = f.read()
-        announcer_instance.wrap_input_content(content=data, document_path='agent/argument/info_rule.md')
+        env_info = redis_client.brpop('gfootball_env', timeout=0)
+        #print(env_info)
+        announcer_instance.wrap_input_content(content=env_info, document_path='agent/argument/info_rule.md')
 
         input_thread = Thread(target=input_listener, args=(input_queue, ))
         input_thread.start()
