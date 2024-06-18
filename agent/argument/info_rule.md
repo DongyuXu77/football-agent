@@ -1,6 +1,5 @@
 # Observations & Actions
 
-
 ## Raw observations
 
 Environment exposes following `raw` observations:

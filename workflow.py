@@ -10,6 +10,7 @@ import redis
 from colorama import Fore
 from agent.plan import planner
 from agent.control import controller
+from agent.comment import commentator
 from agent.env import announcer
 
 """
@@ -22,19 +23,24 @@ def set_env_variable():
     os.environ["OPENAI_API_KEY"] = "sk-QJxd5dfa630db8c817a8eb06347957f2c6ad5cb1500YN9Gq"
     os.environ["OPENAI_LOG"] = "debug"
 
-def workflow_process(planner, controller, state_queue, user_input: str, log_queue):
+def workflow_process(planner, controller, commentator, state_queue, user_input: str, log_queue):
         r"""
         """
         while state_queue.empty():
             time.sleep(1)
         announcer_response = state_queue.get()
         log_queue.put(('announcer', announcer_response))
-        planner.wrap_input_content(content=user_input, status=announcer_response)
+        planner.wrap_input_content(user_content=user_input, status=announcer_response)
         _, planner_response, _ = planner.get_response()
+        # for sub_task in planner_response.split('\n'):
+        # ...
         log_queue.put(('planner', planner_response))
         controller.wrap_input_content(content=planner_response, status=announcer_response)
         _, controller_response, _ = controller.get_response()
         log_queue.put(('controller', controller_response))
+        commentator.wrap_input_content(result="", expect=planner_response)
+        _, commentator_respoense, _ = commentator.get_response()
+        log_queue.put('commentatir', commentator_respoense)
 
 def announce_process(announcer, state_queue):
     r"""
@@ -55,6 +61,8 @@ def log_listener(log_queue):
                 print(Fore.GREEN + text)
             elif tag == 'controller':
                 print(Fore.YELLOW + text)
+            elif tag == 'commentator':
+                print(Fore.BLUE + text)
 
 def input_listener(input_queue):
     while True:
@@ -83,13 +91,11 @@ class google_football(object):
         planner_instance.set_few_shot_prompt(json_file_path="agent/argument/few_shot_prompt/few_shot_prompt.json")
         controller_instance = controller()
         announcer_instance = announcer()
+        commentator_instance = commentator()
         #pdb.set_trace()
         redis_client = redis.StrictRedis(host='localhost', port=30386, db=0)
         
-        f = open('agent/argument/env.json', 'r')
-        data = f.read()
         env_info = redis_client.brpop('gfootball_env', timeout=0)
-        #print(env_info)
         announcer_instance.wrap_input_content(content=env_info, document_path='agent/argument/info_rule.md')
 
         input_thread = Thread(target=input_listener, args=(input_queue, ))
@@ -106,7 +112,7 @@ class google_football(object):
             input_text = input_queue.get()
             if workflow_proc.is_alive():
                 workflow_proc.terminate()
-            workflow_proc = multiprocessing.Process(target=workflow_process, args=(planner_instance, controller_instance, state_queue, input_text, log_queue, ))
+            workflow_proc = multiprocessing.Process(target=workflow_process, args=(planner_instance, controller_instance, commentator_instance, state_queue, input_text, log_queue, ))
             workflow_proc.start()
         
 if __name__=="__main__":
