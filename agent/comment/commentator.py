@@ -10,7 +10,6 @@ class commentator(agent):
         r"""
         """
         super().__init__(system_prompt)
-        self.get_model_info()
 
     def wrap_input_content(self, result: str, expect: str, output_format: str='') -> None:
         r"""

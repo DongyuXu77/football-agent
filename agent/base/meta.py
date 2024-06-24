@@ -42,7 +42,7 @@ class agent(ABC):
         """
         if not os.path.exists(json_file_path):
             raise FileNotFoundError(f" the set_few_shot_prompt file in path :{json_file_path} doesn't exist")
-        with open(json_file_path, 'r') as json_file:
+        with open(json_file_path, 'r', encoding='utf-8') as json_file:
             data = json.load(json_file)
         assert isinstance(data, list), f"The json file in {json_file_path} must be a list"
 
