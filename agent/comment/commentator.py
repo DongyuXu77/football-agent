@@ -14,5 +14,5 @@ class commentator(agent):
     def wrap_input_content(self, result: str, expect: str, output_format: str='') -> None:
         r"""
         """
-        self.wrap_content = "当前实际执行结果为:"+result+"\n预期执行的结果为:"+expect+"\n请问是否完成了预期阶段执行结果，如果没有，请给出对应的建议{output_format})?"
+        self.wrap_content = "当前实际执行结果为:"+result+"\n预期执行的结果为:"+expect+"\n请问是否完成了预期阶段执行结果，如果没有，请给出对应的建议({output_format})?"
     
